@@ -20,23 +20,36 @@ import org.apache.hadoop.util.GenericOptionsParser;
 
 public class HadoopWC {
   public static class TokenizerMapper 
-       extends Mapper<Object, Text, Text, IntWritable>{
+       extends Mapper<Object, Text, Text, ArrayWritable>{
     
-    private final static IntWritable one = new IntWritable(1);
+    //private final static ArrayWritable arr = new IntWritable(1);
     private Text word = new Text();
       
     public void map(Object key, Text value, Context context
                     ) throws IOException, InterruptedException {
 	StringTokenizer itr = new StringTokenizer(value.toString(), ",");
+	ArrayWritable arr = new ArrayWritable();
+	IntWritable[] intArr = new IntWritable[7];
+	int cnt=0;
       while (itr.hasMoreTokens()) {
-        word.set(itr.nextToken());
-        context.write(word, one);
+		if(cnt==0){
+			word.set(itr.nextToken());
+			intArr[cnt] = new IntWritable(0);
+		}
+        else{
+			intArr[cnt]=(IntWritable)itr.nextToken();
+		}
+		if(cnt==7){
+			cnt =0;
+			context.write(word, new ArrayWritable(intArr));
+		}
+		else{cnt++;}       
       }
     }
   }
   
   public static class IntSumReducer 
-       extends Reducer<Text,IntWritable,Text,IntWritable> {
+       extends Reducer<Text,IntWritable,Text,ArrayWritable> {
     private IntWritable result = new IntWritable();
 
     public void reduce(Text key, Iterable<IntWritable> values, 
